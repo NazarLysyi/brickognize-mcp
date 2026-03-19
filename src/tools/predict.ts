@@ -1,10 +1,16 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { imageInputSchema, resolveImage, TOOL_ANNOTATIONS } from "./shared.js";
 import { predict } from "../brickognize/client.js";
 import { mapPredictionResult } from "../brickognize/mappers.js";
-import { formatToolError } from "../utils/errors.js";
+import {
+  imageInputSchema,
+  PREDICT_ENDPOINTS,
+  resolveImage,
+  TOOL_ANNOTATIONS,
+  toolError,
+  toolSuccess,
+} from "./shared.js";
 
-export function createPredictTool(
+function createPredictTool(
   server: McpServer,
   name: string,
   title: string,
@@ -13,46 +19,21 @@ export function createPredictTool(
 ): void {
   server.registerTool(
     name,
-    {
-      title,
-      description,
-      inputSchema: imageInputSchema,
-      annotations: TOOL_ANNOTATIONS,
-    },
+    { title, description, inputSchema: imageInputSchema, annotations: TOOL_ANNOTATIONS },
     async (input) => {
       try {
         const { blob, filename } = await resolveImage(input);
         const raw = await predict(endpoint, blob, filename);
-        const result = mapPredictionResult(raw, input.includeRaw ?? false);
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: result.summary,
-            },
-            {
-              type: "text" as const,
-              text: JSON.stringify(result, null, 2),
-            },
-          ],
-        };
+        const result = mapPredictionResult(raw, input.includeRaw);
+        return toolSuccess(result.summary, JSON.stringify(result, null, 2));
       } catch (error) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: "text" as const,
-              text: formatToolError(error),
-            },
-          ],
-        };
+        return toolError(error);
       }
     },
   );
 }
 
-export function registerIdentifyTool(server: McpServer): void {
+export function registerPredictTools(server: McpServer): void {
   createPredictTool(
     server,
     "brickognize_identify",
@@ -61,6 +42,39 @@ export function registerIdentifyTool(server: McpServer): void {
       "Use this when the item type is unknown or the image may contain multiple types.\n\n" +
       "Provide imagePath — absolute path to a local image file (JPEG, PNG, or WebP).\n" +
       "Returns top matches with confidence scores, IDs, names, categories, and links to BrickLink/BrickOwl.",
-    "/predict/",
+    PREDICT_ENDPOINTS.general,
+  );
+
+  createPredictTool(
+    server,
+    "brickognize_identify_part",
+    "Identify LEGO Part",
+    "Identify a specific LEGO part/brick/element from a photograph. " +
+      "Use instead of brickognize_identify when you know the image shows a single LEGO piece for more accurate results.\n\n" +
+      "Provide imagePath — absolute path to a local image file (JPEG, PNG, or WebP).\n" +
+      "Returns matched parts with IDs, names, confidence scores, and links.",
+    PREDICT_ENDPOINTS.part,
+  );
+
+  createPredictTool(
+    server,
+    "brickognize_identify_set",
+    "Identify LEGO Set",
+    "Identify a LEGO set from a photograph of its box, assembled model, or instructions. " +
+      "Use instead of brickognize_identify when you know the image shows a LEGO set.\n\n" +
+      "Provide imagePath — absolute path to a local image file (JPEG, PNG, or WebP).\n" +
+      "Returns matched sets with set numbers, names, confidence scores, and links.",
+    PREDICT_ENDPOINTS.set,
+  );
+
+  createPredictTool(
+    server,
+    "brickognize_identify_fig",
+    "Identify LEGO Minifigure",
+    "Identify a LEGO minifigure from a photograph. " +
+      "Use instead of brickognize_identify when you know the image shows a minifigure.\n\n" +
+      "Provide imagePath — absolute path to a local image file (JPEG, PNG, or WebP).\n" +
+      "Returns matched minifigures with IDs, names, confidence scores, and links.",
+    PREDICT_ENDPOINTS.fig,
   );
 }
