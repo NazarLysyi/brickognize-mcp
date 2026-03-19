@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { TOOL_ANNOTATIONS } from "./shared.js";
 import { checkHealth } from "../brickognize/client.js";
-import { formatToolError } from "../utils/errors.js";
+import { TOOL_ANNOTATIONS, toolError, toolSuccess } from "./shared.js";
 
 export function registerHealthTool(server: McpServer): void {
   server.registerTool(
@@ -16,14 +15,9 @@ export function registerHealthTool(server: McpServer): void {
     async () => {
       try {
         const health = await checkHealth();
-        return {
-          content: [{ type: "text" as const, text: JSON.stringify(health, null, 2) }],
-        };
+        return toolSuccess(JSON.stringify(health, null, 2));
       } catch (error) {
-        return {
-          isError: true,
-          content: [{ type: "text" as const, text: formatToolError(error) }],
-        };
+        return toolError(error);
       }
     },
   );

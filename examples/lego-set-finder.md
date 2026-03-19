@@ -20,15 +20,18 @@ Follow these steps in order. Parallelize where indicated.
 
 Scan the folder for all image files. Record the total count N.
 
-### Step 2 — Identify parts (parallel)
+### Step 2 — Identify parts (batch)
 
-For EACH image, call `brickognize_identify_part`. From the top result, extract:
+Call `brickognize_batch_identify` **once** with all image paths and `type: "part"`. Do not call `brickognize_identify_part` in a loop — the batch tool processes images in parallel and is significantly faster.
+
+From each result, extract:
 
 - **Part ID** (e.g. `54094pb04`)
 - **Part name**
 - **Confidence score** (0–100%)
 
 If confidence is below 50%, flag the part as uncertain but still include it in matching with reduced weight.
+If a result has `status: "error"`, skip that image and note it in the final output.
 
 ### Step 3 — Find sets per part (parallel)
 
@@ -103,7 +106,7 @@ https://www.bricklink.com/v2/catalog/catalogitem.page?S=7067-1
 
 ## Constraints
 
-- Use only `brickognize_identify_part` for part identification — do not guess from visual inspection alone
+- Use `brickognize_batch_identify` (not `brickognize_identify_part` in a loop) for part identification — do not guess from visual inspection alone
 - Each photo contains exactly one part
 - BrickLink URL format: `https://www.bricklink.com/v2/catalog/catalogitem.page?S={SET_NUMBER}-1`
 - If a part appears in 50+ sets, deprioritize it in the ranking — it's too generic to be a useful signal

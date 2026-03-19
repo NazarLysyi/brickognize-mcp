@@ -1,7 +1,31 @@
 import { readFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 import { z } from "zod";
-import { imageNotFound, invalidInput } from "../utils/errors.js";
+import { formatToolError, imageNotFound, invalidInput } from "../utils/errors.js";
+
+export const PREDICT_ENDPOINTS = {
+  general: "/predict/",
+  part: "/predict/parts/",
+  set: "/predict/sets/",
+  fig: "/predict/figs/",
+} as const;
+
+type TextContent = { type: "text"; text: string };
+export type ToolSuccessResult = { content: TextContent[] };
+export type ToolErrorResult = { isError: true; content: TextContent[] };
+
+/** Build a successful tool response with one or more text content blocks. */
+export function toolSuccess(...texts: string[]): ToolSuccessResult {
+  return { content: texts.map((text) => ({ type: "text", text })) };
+}
+
+/** Build an error tool response from a caught exception. */
+export function toolError(error: unknown): ToolErrorResult {
+  return {
+    isError: true,
+    content: [{ type: "text", text: formatToolError(error) }],
+  };
+}
 
 const SUPPORTED_MIME_TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -27,8 +51,7 @@ export const imageInputSchema = {
     .describe(
       "When true, includes the raw Brickognize API response alongside formatted results. Useful for debugging.",
     )
-    .default(false)
-    .optional(),
+    .default(false),
 };
 
 export interface ResolvedImage {
@@ -64,7 +87,7 @@ async function resolveFromPath(imagePath: string): Promise<ResolvedImage> {
   try {
     buffer = await readFile(resolved);
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+    if (err instanceof Error && (err as NodeJS.ErrnoException).code === "ENOENT") {
       throw imageNotFound(resolved);
     }
     throw err;
