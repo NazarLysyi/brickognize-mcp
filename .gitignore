@@ -2,3 +2,6 @@
 /.idea/
 /.claude/
 /dist/
+.env
+.env.local
+cache.db

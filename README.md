@@ -13,20 +13,47 @@ npm run build
 
 ## Configuration
 
-Add to your MCP client config:
+### Environment Variables
+
+| Variable              | Required | Default | Description                                                                                       |
+| --------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `REBRICKABLE_API_KEY` | Optional | —       | Free API key from [rebrickable.com/api](https://rebrickable.com/api/). Required for lookup tools. |
+| `BRICKOGNIZE_CACHE`   | Optional | `none`  | Cache backend for Rebrickable API responses. See [Caching](#caching) below.                       |
+
+### MCP Client Config
 
 ```json
 {
   "mcpServers": {
     "brickognize": {
       "command": "node",
-      "args": ["/absolute/path/to/brickognize-mcp/dist/index.js"]
+      "args": ["/absolute/path/to/brickognize-mcp/dist/index.js"],
+      "env": {
+        "REBRICKABLE_API_KEY": "your-key-here",
+        "BRICKOGNIZE_CACHE": "sqlite"
+      }
     }
   }
 }
 ```
 
+### Caching
+
+Rebrickable API responses can be cached to speed up repeated lookups and reduce API calls. Configure with `BRICKOGNIZE_CACHE`:
+
+| Value    | Behaviour                                                                          |
+| -------- | ---------------------------------------------------------------------------------- |
+| `none`   | No caching (default). Every request hits the Rebrickable API.                      |
+| `memory` | In-process cache. Fast, but cleared on every server restart.                       |
+| `sqlite` | Persistent cache stored at `~/.cache/brickognize-mcp/cache.db`. Survives restarts. |
+
+Use `sqlite` in production, `memory` for short-lived sessions, `none` to always get fresh data.
+
+To clear the cache, call the `brickognize_cache_clear` tool (available when cache is enabled).
+
 ## Tools
+
+### Recognition Tools
 
 | Tool                         | Description                                          |
 | ---------------------------- | ---------------------------------------------------- |
@@ -36,6 +63,15 @@ Add to your MCP client config:
 | `brickognize_identify_set`   | Identify a LEGO set                                  |
 | `brickognize_identify_fig`   | Identify a LEGO minifigure                           |
 | `brickognize_batch_identify` | Identify multiple LEGO items from images in parallel |
+
+### Lookup Tools (require `REBRICKABLE_API_KEY`)
+
+| Tool                             | Description                                           |
+| -------------------------------- | ----------------------------------------------------- |
+| `brickognize_part_details`       | Part colors and which sets contain it (appears in)    |
+| `brickognize_batch_part_details` | Same as above but for multiple parts in a single call |
+| `brickognize_set_details`        | Set info, year, theme, and full parts inventory       |
+| `brickognize_minifig_details`    | Minifigure info and which sets contain it             |
 
 ## Image Input
 
@@ -67,4 +103,6 @@ npm run dev           # Watch mode
 npm run build         # Compile
 npm run lint          # ESLint
 npm run format        # Prettier
+npm test              # Unit + integration tests (live API tests skipped without REBRICKABLE_API_KEY)
+REBRICKABLE_API_KEY=your-key npm test  # Full suite including live API tests
 ```

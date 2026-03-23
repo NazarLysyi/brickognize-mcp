@@ -60,7 +60,8 @@ export function registerBatchIdentifyTool(server: McpServer): void {
         "Identify multiple LEGO items from local image files in a single call. " +
         "Processes all images in parallel and returns an array of results. " +
         "Use this when the user provides a folder of photos or multiple image paths. " +
-        "Accepts 1–20 image paths per call.",
+        "Accepts 1–20 image paths per call.\n\n" +
+        "When type='part', color prediction is included automatically in each result's predictedColors field.",
       inputSchema: {
         imagePaths: z
           .array(z.string())

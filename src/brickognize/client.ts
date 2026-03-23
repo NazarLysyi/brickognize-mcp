@@ -1,6 +1,8 @@
 import type { HealthResponse, RawSearchResults } from "./types.js";
 import { apiError, unexpectedResponse } from "../utils/errors.js";
 
+const PARTS_PREDICT_ENDPOINT = "/predict/parts/";
+
 const BASE_URL = "https://api.brickognize.com";
 
 export async function checkHealth(): Promise<HealthResponse> {
@@ -29,7 +31,13 @@ export async function predict(
   const form = new FormData();
   form.append("query_image", imageBlob, filename);
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
+  // Always request color prediction for the parts endpoint specifically
+  const url =
+    endpoint === PARTS_PREDICT_ENDPOINT
+      ? `${BASE_URL}${endpoint}?predict_color=true`
+      : `${BASE_URL}${endpoint}`;
+
+  const res = await fetch(url, {
     method: "POST",
     body: form,
     signal: AbortSignal.timeout(60_000),
