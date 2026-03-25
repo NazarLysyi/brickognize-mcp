@@ -52,7 +52,8 @@ export function registerPredictTools(server: McpServer): void {
     "Identify a specific LEGO part/brick/element from a photograph. " +
       "Use instead of brickognize_identify when you know the image shows a single LEGO piece for more accurate results.\n\n" +
       "Provide imagePath — absolute path to a local image file (JPEG, PNG, or WebP).\n" +
-      "Returns matched parts with IDs, names, confidence scores, and links.",
+      "Automatically detects the part's color (returned in predictedColors).\n" +
+      "Returns matched parts with IDs, names, confidence scores, predicted colors, and links.",
     PREDICT_ENDPOINTS.part,
   );
 

@@ -25,10 +25,17 @@ export interface RawBoundingBox {
   score: number;
 }
 
+export interface RawColorPrediction {
+  id: string;
+  name: string;
+  score: number;
+}
+
 export interface RawSearchResults {
   listing_id: string;
   bounding_box: RawBoundingBox;
   items: RawCandidateItem[];
+  colors?: RawColorPrediction[];
 }
 
 // Normalized output types
@@ -58,11 +65,18 @@ export interface BoundingBox {
   score: number;
 }
 
+export interface PredictedColor {
+  id: string;
+  name: string;
+  score: number;
+}
+
 export interface PredictionResult {
   summary: string;
   listingId: string;
   boundingBox: BoundingBox;
   matches: Match[];
+  predictedColors?: PredictedColor[];
   raw?: RawSearchResults;
 }
 

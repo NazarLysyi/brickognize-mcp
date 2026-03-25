@@ -8,6 +8,16 @@ export class BrickognizeError extends Error {
   }
 }
 
+export class RebrickableError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
+    super(message);
+    this.name = "RebrickableError";
+  }
+}
+
 export function imageNotFound(path: string): BrickognizeError {
   return new BrickognizeError(`Image file not found: ${path}`, "IMAGE_NOT_FOUND");
 }
@@ -27,13 +37,28 @@ export function unexpectedResponse(detail: string): BrickognizeError {
   );
 }
 
+export function rebrickableKeyMissing(): RebrickableError {
+  return new RebrickableError(
+    "REBRICKABLE_API_KEY environment variable is not set. " +
+      "Get a free API key at https://rebrickable.com/api/",
+    "API_KEY_MISSING",
+  );
+}
+
+export function rebrickableApiError(status: number, body: string): RebrickableError {
+  return new RebrickableError(`Rebrickable API returned ${status}: ${body}`, "API_ERROR");
+}
+
 export function formatToolError(error: unknown): string {
   if (error instanceof BrickognizeError) {
     return error.message;
   }
+  if (error instanceof RebrickableError) {
+    return error.message;
+  }
   if (error instanceof Error) {
     if (error.message.includes("fetch")) {
-      return `Network error communicating with Brickognize API: ${error.message}`;
+      return `Network error: ${error.message}`;
     }
     return error.message;
   }

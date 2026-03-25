@@ -42,10 +42,7 @@ export const TOOL_ANNOTATIONS = {
 } as const;
 
 export const imageInputSchema = {
-  imagePath: z
-    .string()
-    .describe("Absolute path to a local image file (JPEG, PNG, or WebP).")
-    .optional(),
+  imagePath: z.string().describe("Absolute path to a local image file (JPEG, PNG, or WebP)."),
   includeRaw: z
     .boolean()
     .describe(
@@ -59,10 +56,7 @@ export interface ResolvedImage {
   filename: string;
 }
 
-export async function resolveImage(input: { imagePath?: string }): Promise<ResolvedImage> {
-  if (!input.imagePath) {
-    throw invalidInput("Provide imagePath — absolute path to a local image file.");
-  }
+export async function resolveImage(input: { imagePath: string }): Promise<ResolvedImage> {
   return resolveFromPath(input.imagePath);
 }
 
